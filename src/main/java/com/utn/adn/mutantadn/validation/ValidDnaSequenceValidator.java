@@ -10,7 +10,7 @@ public class ValidDnaSequenceValidator implements ConstraintValidator<ValidDnaSe
 
     @Override
     public boolean isValid(String[] dna, ConstraintValidatorContext context) {
-        if (dna == null) return false; 
+        if (dna == null) return false;
 
         int n = dna.length;
         if (n == 0) return false;

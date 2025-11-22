@@ -15,7 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/mutant")
+@RequestMapping("/")
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Tag(name = "Mutant Detector", description = "API para la detección de mutantes y estadísticas")
 public class MutantController {
@@ -23,20 +24,26 @@ public class MutantController {
     private final MutantService mutantService;
     private final StatsService statsService;
 
-    @Operation(summary = "Detectar si un humano es mutante", description = "Analiza la secuencia de ADN enviada y determina si corresponde a un mutante.")
+    @Operation(summary = "Detectar si un humano es mutante")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Es Mutante"),
             @ApiResponse(responseCode = "403", description = "No es Mutante (Es Humano)"),
-            @ApiResponse(responseCode = "400", description = "ADN Inválido (no cuadrado, caracteres erróneos o nulo)")
+            @ApiResponse(responseCode = "400", description = "ADN Inválido")
     })
-    @PostMapping
-
+    @PostMapping("/mutant")
     public ResponseEntity<Void> checkMutant(@Valid @RequestBody DnaRequest dnaRequest) {
         boolean isMutant = mutantService.analyzeDna(dnaRequest.dna());
         if (isMutant) {
-            return ResponseEntity.ok().build(); // 200 OK
+            return ResponseEntity.ok().build();
         } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 403 Forbidden
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
+    }
+
+    @Operation(summary = "Obtener estadísticas")
+    @ApiResponse(responseCode = "200", description = "Estadísticas obtenidas correctamente")
+    @GetMapping("/stats")
+    public ResponseEntity<StatsResponse> getStats() {
+        return ResponseEntity.ok(statsService.getStats());
     }
 }

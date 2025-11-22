@@ -1,29 +1,47 @@
 package com.utn.adn.mutantadn.service;
 
-import org.springframework.stereotype.Service;
-import java.util.regex.Pattern;
+import org.springframework.stereotype.Component;
+import java.io.Serializable;
 
-@Service
-public class MutantDetector {
+@Component
+public class MutantDetector implements Serializable {
 
 
     private static final int SEQUENCE_LENGTH = 4;
-    private static final int MUTANT_THRESHOLD = 2;
-
+    private static final int MUTANT_SEQUENCE_COUNT = 2;
+    private static final String VALID_CHARS = "ATCG";
 
     public boolean isMutant(String[] dna) {
 
-        if (dna == null || dna.length == 0) return false;
+        if (dna == null || dna.length == 0) {
+            throw new IllegalArgumentException("El ADN no puede ser nulo ni vacío");
+        }
+
         int n = dna.length;
-
-
         char[][] matrix = new char[n][n];
+
         for (int i = 0; i < n; i++) {
-            matrix[i] = dna[i].toUpperCase().toCharArray();
+            String row = dna[i];
+
+            if (row == null) {
+                throw new IllegalArgumentException("La fila " + i + " del ADN no puede ser nula");
+            }
+
+            if (row.length() != n) {
+                throw new IllegalArgumentException("El ADN debe ser una matriz cuadrada NxN");
+            }
+
+
+            for (int j = 0; j < n; j++) {
+                char c = Character.toUpperCase(row.charAt(j));
+                if (VALID_CHARS.indexOf(c) == -1) {
+                    throw new IllegalArgumentException("Carácter inválido en ADN: " + c);
+                }
+                matrix[i][j] = c;
+            }
         }
 
         int sequenceCount = 0;
-
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
@@ -31,38 +49,34 @@ public class MutantDetector {
                 if (j <= n - SEQUENCE_LENGTH) {
                     if (checkHorizontal(matrix, i, j)) {
                         sequenceCount++;
-                        if (sequenceCount >= MUTANT_THRESHOLD) return true;
+                        if (sequenceCount >= MUTANT_SEQUENCE_COUNT) return true;
                     }
                 }
-
 
                 if (i <= n - SEQUENCE_LENGTH) {
                     if (checkVertical(matrix, i, j)) {
                         sequenceCount++;
-                        if (sequenceCount >= MUTANT_THRESHOLD) return true;
+                        if (sequenceCount >= MUTANT_SEQUENCE_COUNT) return true;
                     }
                 }
-
 
                 if (i <= n - SEQUENCE_LENGTH && j <= n - SEQUENCE_LENGTH) {
                     if (checkDiagonal(matrix, i, j)) {
                         sequenceCount++;
-                        if (sequenceCount >= MUTANT_THRESHOLD) return true;
+                        if (sequenceCount >= MUTANT_SEQUENCE_COUNT) return true;
                     }
                 }
-
 
                 if (i >= SEQUENCE_LENGTH - 1 && j <= n - SEQUENCE_LENGTH) {
                     if (checkContraDiagonal(matrix, i, j)) {
                         sequenceCount++;
-                        if (sequenceCount >= MUTANT_THRESHOLD) return true;
+                        if (sequenceCount >= MUTANT_SEQUENCE_COUNT) return true;
                     }
                 }
             }
         }
         return false;
     }
-
 
     private boolean checkHorizontal(char[][] matrix, int row, int col) {
         char base = matrix[row][col];
